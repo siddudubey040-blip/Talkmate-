@@ -510,50 +510,33 @@
     function getGenderColor(g) { return g === 'Male' ? '#4a9eff' : '#ff6b9d'; }
     function getGenderAgeDisplay(g, a) { return `${getGenderIcon(g)} ${a} yrs`; }
 
-    // ==================== SHARE APP FUNCTION - ONLY ONCE ====================
+    // ==================== SHARE APP FUNCTION - ONLY LINK SHARE ====================
     function shareApp() {
-        // Check if user has already shared before
-        if (currentUser.hasShared === true) {
-            alert("📱 You have already shared the app! +5 free chats already added.");
-            return;
-        }
-        
         // Try native share first (mobile)
         if (navigator.share) {
             navigator.share({
                 title: 'Talkmate',
                 text: 'Join me on Talkmate - Connect with friends! Chat, share stories, make calls!',
                 url: APP_LINK
-            }).then(() => {
-                // Add free chats only once
-                currentUser.hasShared = true;
-                currentUser.freeChatsLeft += 5;
-                localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                let allUsers = users.map(u => u.id === currentUser.id ? currentUser : u);
-                localStorage.setItem('users', JSON.stringify(allUsers));
-                alert("🎉 +5 free chats added! Thank you for sharing!");
-                showChat();
             }).catch((err) => {
                 console.log('Share cancelled', err);
+                // Fallback to copy link
+                copyAppLink();
             });
         } else {
             // Fallback for browsers that don't support share - copy link
-            let tempInput = document.createElement('input');
-            tempInput.value = APP_LINK;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            
-            // Add free chats only once
-            currentUser.hasShared = true;
-            currentUser.freeChatsLeft += 5;
-            localStorage.setItem('currentUser', JSON.stringify(currentUser));
-            let allUsers = users.map(u => u.id === currentUser.id ? currentUser : u);
-            localStorage.setItem('users', JSON.stringify(allUsers));
-            alert("📋 App link copied!\n🎉 +5 free chats added!");
-            showChat();
+            copyAppLink();
         }
+    }
+    
+    function copyAppLink() {
+        let tempInput = document.createElement('input');
+        tempInput.value = APP_LINK;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        alert("📋 App link copied to clipboard!\n\nShare this link with your friends:\n" + APP_LINK);
     }
 
     // ==================== CALLING FEATURE ====================
@@ -1264,7 +1247,7 @@
         let modal = document.createElement('div'); modal.className = 'modal-overlay';
         modal.innerHTML = `<div style="display:flex;justify-content:center;align-items:center;min-height:100vh;"><div class="settings-card">
             <div class="settings-item" onclick="this.parentElement.parentElement.parentElement.remove(); openEditProfile()">✏️ Edit Profile</div>
-            <div class="settings-item" onclick="shareApp(); this.parentElement.parentElement.parentElement.remove();">📤 Share App (+5 Chats - One Time)</div>
+            <div class="settings-item" onclick="shareApp(); this.parentElement.parentElement.parentElement.remove();">📤 Share App</div>
             <div class="settings-item" onclick="logout()">🚪 Logout</div>
             <div class="settings-item" onclick="clearData()">🗑️ Clear Cache</div>
             <div class="settings-item" onclick="this.parentElement.parentElement.parentElement.remove()">❌ Cancel</div>
@@ -1289,7 +1272,7 @@
         if(users.find(u => u.email === email)) { document.getElementById('signupError').innerText = "Email already exists"; return; }
         if(users.find(u => u.username === username)) { document.getElementById('signupError').innerText = "Username already taken"; return; }
         let profilePicUrl = dpFile ? URL.createObjectURL(dpFile) : null;
-        users.push({ id: Date.now(), fullname, username, age: parseInt(age), email, password, gender, profilePic: profilePicUrl, followers: [], following: [], isPremium: false, freeChatsLeft: 10, hasShared: false });
+        users.push({ id: Date.now(), fullname, username, age: parseInt(age), email, password, gender, profilePic: profilePicUrl, followers: [], following: [], isPremium: false, freeChatsLeft: 10 });
         localStorage.setItem('users', JSON.stringify(users));
         alert("✅ Signup successful! Please login.");
         showLogin();
@@ -1309,8 +1292,8 @@
 
     function initDemo() {
         if(users.length === 0) {
-            users.push({ id: 1, fullname: "John Doe", username: "john", age: 25, email: "john@test.com", password: "123", gender: "Male", profilePic: null, followers: [], following: [], isPremium: false, freeChatsLeft: 10, hasShared: false });
-            users.push({ id: 2, fullname: "Jane Smith", username: "jane", age: 23, email: "jane@test.com", password: "123", gender: "Female", profilePic: null, followers: [], following: [], isPremium: true, freeChatsLeft: 0, hasShared: false });
+            users.push({ id: 1, fullname: "John Doe", username: "john", age: 25, email: "john@test.com", password: "123", gender: "Male", profilePic: null, followers: [], following: [], isPremium: false, freeChatsLeft: 10 });
+            users.push({ id: 2, fullname: "Jane Smith", username: "jane", age: 23, email: "jane@test.com", password: "123", gender: "Female", profilePic: null, followers: [], following: [], isPremium: true, freeChatsLeft: 0 });
             posts.push({ id: 1, userId: 1, content: "Welcome to Talkmate!", mediaType: "text", mediaUrl: null, likes: [], comments: [] });
             localStorage.setItem('users', JSON.stringify(users));
             localStorage.setItem('posts', JSON.stringify(posts));
@@ -1322,4 +1305,4 @@
     if(stored) { currentUser = JSON.parse(stored); let fresh = users.find(u => u.id === currentUser.id); if(fresh) { currentUser = fresh; document.getElementById('loginPage').classList.remove('active'); document.getElementById('bottomNav').style.display = 'flex'; loadMainApp(); } }
 </script>
 </body>
-</html>
+</html>                   
